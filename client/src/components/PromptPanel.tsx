@@ -76,9 +76,21 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
     },
     onError: (error: any) => {
       onGeneratingChange(false);
+
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to generate image. Please try again.";
+
+      if (error.message?.includes("temporarily unavailable") || error.message?.includes("502") || error.message?.includes("503")) {
+        errorMessage = "🔧 Pollinations.ai is temporarily down for maintenance. Please try again in a few minutes, or add an OpenAI API key to use DALL-E 3 instead.";
+      } else if (error.message?.includes("high traffic")) {
+        errorMessage = "⏳ Service experiencing high traffic. Please wait a moment and try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Generation Failed",
-        description: error.message || "Failed to generate image. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -249,7 +261,7 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
             </Button>
           )}
         </div>
-        
+
         {referenceImage ? (
           <div className="space-y-3">
             <div className="relative aspect-video rounded-lg overflow-hidden border border-border">

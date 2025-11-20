@@ -15,45 +15,9 @@ export async function generateWithSegmind(params: {
   width?: number;
   height?: number;
 }): Promise<{ imageBuffer: Buffer }> {
-  // Segmind has a free tier - using their public API
-  const width = params.width || 512;
-  const height = params.height || 512;
-  
-  const url = "https://api.segmind.com/v1/sd1.5-txt2img";
-  
-  try {
-    console.log("Trying Segmind API");
-    const response = await axios.post(
-      url,
-      {
-        prompt: params.prompt,
-        negative_prompt: "blurry, low quality, distorted",
-        samples: 1,
-        width: width,
-        height: height,
-        steps: 20,
-        seed: Math.floor(Math.random() * 1000000),
-        scheduler: "euler_a",
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        responseType: "arraybuffer",
-        timeout: 60000,
-      }
-    );
-
-    if (!response.data || response.data.byteLength === 0) {
-      throw new Error("Segmind returned empty image data");
-    }
-
-    console.log("Segmind generation successful");
-    return { imageBuffer: Buffer.from(response.data) };
-  } catch (error: any) {
-    console.error("Segmind error:", error.message);
-    throw new Error(`Segmind generation failed: ${error.message}`);
-  }
+  // Note: Segmind now requires API key, so this is deprecated
+  // Keeping for backwards compatibility but it will fail without key
+  throw new Error("Segmind now requires an API key. Please use Pollinations or add SEGMIND_API_KEY to your environment.");
 }
 
 export async function generateWithPollinations(params: {
@@ -80,37 +44,51 @@ export async function generateWithPollinations(params: {
   // Clean and encode the prompt
   const encodedPrompt = encodeURIComponent(finalPrompt);
   
-  // Try multiple Pollinations endpoints with retry logic
+  // Try multiple Pollinations endpoints with retry logic and delays
   const models = ['flux', 'turbo', 'flux-realism'];
   let lastError: Error | null = null;
   
-  for (const model of models) {
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&model=${model}`;
+  for (let attempt = 0; attempt < models.length; attempt++) {
+    const model = models[attempt];
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&model=${model}&seed=${Date.now()}`;
     
     try {
-      console.log(`Trying Pollinations with model: ${model}`);
+      console.log(`Trying Pollinations with model: ${model} (attempt ${attempt + 1}/${models.length})`);
+      
+      // Add delay between retries to avoid rate limiting
+      if (attempt > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
       const response = await axios.get(url, {
         responseType: "arraybuffer",
-        timeout: 60000, // 1 minute timeout per attempt
+        timeout: 90000, // Increased to 90 seconds
         maxContentLength: 50 * 1024 * 1024,
         maxBodyLength: 50 * 1024 * 1024,
-        validateStatus: (status) => status === 200, // Only accept 200
+        validateStatus: (status) => status === 200,
       });
 
       if (!response.data || response.data.byteLength === 0) {
-        throw new Error("Pollinations returned empty image data");
+        throw new Error("Empty response from Pollinations");
       }
 
-      console.log(`Pollinations success with model: ${model}`);
+      console.log(`✓ Pollinations success with model: ${model}`);
       return { imageBuffer: Buffer.from(response.data) };
     } catch (error: any) {
-      console.error(`Pollinations ${model} failed:`, error.response?.status || error.message);
+      const statusCode = error.response?.status;
+      const errorMsg = statusCode === 502 ? "Server temporarily unavailable" : error.message;
+      console.error(`✗ Pollinations ${model} failed:`, errorMsg);
       lastError = error;
-      // Continue to next model
     }
   }
   
-  throw new Error(`Pollinations.ai generation failed after trying all models: ${lastError?.message || 'Unknown error'}`);
+  // If all attempts failed, throw a user-friendly error
+  const statusCode = (lastError as any)?.response?.status;
+  if (statusCode === 502 || statusCode === 503) {
+    throw new Error("Pollinations.ai is temporarily unavailable (server maintenance). Please try again in a few minutes.");
+  }
+  
+  throw new Error(`Unable to generate image: ${lastError?.message || 'Service temporarily unavailable'}`);
 }
 
 export async function generateWithReplicate(params: {
@@ -186,21 +164,10 @@ export async function generateImage(params: {
   let actualProvider = provider;
 
   // Try the requested provider first, then fallback to free options
-  const providersToTry: Array<"openai" | "hf" | "replicate" | "pollinations" | "segmind"> = [provider];
+  const providersToTry: Array<"openai" | "hf" | "replicate" | "pollinations"> = [provider];
   
-  // Add fallback providers (free options) - always try both free providers
+  // Add Pollinations as fallback (only free provider currently working)
   if (provider !== "pollinations") {
-    providersToTry.push("pollinations");
-  }
-  if (provider !== "segmind") {
-    providersToTry.push("segmind" as any);
-  }
-  
-  // Add the other free provider as final fallback
-  if (provider === "pollinations" && !providersToTry.includes("segmind" as any)) {
-    providersToTry.push("segmind" as any);
-  }
-  if (provider === "segmind" && !providersToTry.includes("pollinations")) {
     providersToTry.push("pollinations");
   }
 
@@ -244,16 +211,6 @@ export async function generateImage(params: {
         model = "flux";
         actualProvider = "pollinations";
         break;
-      } else if (currentProvider === "segmind") {
-        const result = await generateWithSegmind({
-          prompt,
-          width,
-          height,
-        });
-        imageBuffer = result.imageBuffer;
-        model = "stable-diffusion-1.5";
-        actualProvider = "segmind" as any;
-        break;
       }
     } catch (error: any) {
       const errorMsg = error.response?.status 
@@ -265,8 +222,9 @@ export async function generateImage(params: {
       // If this was the last provider to try, throw a more helpful error
       if (currentProvider === providersToTry[providersToTry.length - 1]) {
         throw new Error(
-          `All providers failed. Pollinations may be temporarily down. Last error: ${errorMsg}. ` +
-          `Please try again in a few moments or use a different provider.`
+          `Image generation currently unavailable. ${errorMsg}. ` +
+          `Pollinations.ai may be experiencing high traffic or maintenance. ` +
+          `Please try again in a few minutes, or add an OpenAI API key for DALL-E 3.`
         );
       }
       
