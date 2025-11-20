@@ -31,14 +31,34 @@ export async function generateWithPollinations(params: {
   const width = params.width || 512;
   const height = params.height || 512;
   
-  // Enhance prompt if reference image is provided
+  // Enhance prompt based on reference strength if reference image is provided
   let finalPrompt = params.prompt;
-  if (params.referenceImage) {
-    const strength = params.referenceStrength || 0.7;
-    const creativity = strength < 0.6 ? "highly creative interpretation" : 
-                       strength < 0.8 ? "creative variation" : 
-                       "faithful adaptation";
-    finalPrompt = `${params.prompt}, ${creativity} of reference style, maintaining artistic essence while adding unique elements`;
+  if (params.referenceImage && params.referenceStrength !== undefined) {
+    const strength = params.referenceStrength;
+    
+    // Map strength to creativity level (0.3-0.95 range)
+    let creativity: string;
+    let instructions: string;
+    
+    if (strength >= 0.85) {
+      // 0.85-0.95: Very close to reference
+      creativity = "faithful recreation";
+      instructions = "closely following the reference image's composition, style, colors, and atmosphere";
+    } else if (strength >= 0.7) {
+      // 0.7-0.84: Balanced
+      creativity = "inspired variation";
+      instructions = "maintaining the core aesthetic and mood of the reference while introducing subtle creative variations";
+    } else if (strength >= 0.5) {
+      // 0.5-0.69: More creative
+      creativity = "creative interpretation";
+      instructions = "drawing inspiration from the reference's style and themes but with significant artistic freedom";
+    } else {
+      // 0.3-0.49: Very creative
+      creativity = "loosely inspired creation";
+      instructions = "taking conceptual inspiration from the reference while creating something distinctly unique";
+    }
+    
+    finalPrompt = `${params.prompt}, ${creativity}, ${instructions}, professional digital art quality`;
   }
   
   // Clean and encode the prompt

@@ -148,7 +148,7 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
       guidanceScale,
       initImage: selectedStyle?.dataUri,
       referenceImage: referenceImage || undefined,
-      referenceStrength: referenceStrength,
+      referenceStrength: referenceImage ? referenceStrength : undefined,
     });
   };
 
@@ -273,8 +273,10 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Reference Strength</Label>
-                <span className="text-xs text-muted-foreground">{referenceStrength.toFixed(2)}</span>
+                <Label className="text-xs font-medium">Reference Strength</Label>
+                <Badge variant="secondary" className="text-xs">
+                  {referenceStrength.toFixed(2)}
+                </Badge>
               </div>
               <Slider
                 value={[referenceStrength]}
@@ -284,8 +286,18 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
                 step={0.05}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
-                Lower = more creative variation • Higher = closer to reference
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Creative</span>
+                <span>
+                  {referenceStrength >= 0.85 ? "Very Close" :
+                   referenceStrength >= 0.7 ? "Balanced" :
+                   referenceStrength >= 0.5 ? "Creative" :
+                   "Very Creative"}
+                </span>
+                <span>Reference</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Lower values = more creative freedom • Higher values = closer to reference style
               </p>
             </div>
           </div>

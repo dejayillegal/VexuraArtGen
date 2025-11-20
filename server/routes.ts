@@ -77,6 +77,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
+        if (req.body.referenceImage && req.body.referenceStrength !== undefined) {
+          console.log(`Using reference image with strength: ${req.body.referenceStrength}`);
+        }
+        
         const result = await generateImage({
           prompt: req.body.prompt,
           provider: req.body.provider,
