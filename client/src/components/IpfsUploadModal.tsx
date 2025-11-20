@@ -37,7 +37,7 @@ export function IpfsUploadModal({ open, onOpenChange, imageDataUri }: IpfsUpload
         zipB64: base64,
       });
 
-      return response;
+      return await response.json();
     },
     onSuccess: (data: any) => {
       setCid(data.cid);

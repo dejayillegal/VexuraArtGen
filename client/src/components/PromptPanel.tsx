@@ -42,7 +42,8 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
 
   const generateMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/generate", data);
+      const response = await apiRequest("POST", "/api/generate", data);
+      return await response.json();
     },
     onSuccess: async (data: GenerateResponse) => {
       onGeneratingChange(false);
@@ -83,7 +84,8 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
 
   const extractConceptsMutation = useMutation({
     mutationFn: async (imageDataUri: string) => {
-      return await apiRequest("POST", "/api/extract_concepts", { imageDataUri });
+      const response = await apiRequest("POST", "/api/extract_concepts", { imageDataUri });
+      return await response.json();
     },
     onSuccess: (data: any) => {
       setPrompt((prev) => {
