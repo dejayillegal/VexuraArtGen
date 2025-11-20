@@ -1,0 +1,272 @@
+Create a production-grade full-stack web app called Vexura — an AAA digital art generator designed to produce high-value, sellable digital art and NFT-ready packages. This prompt is an engineering spec for the Replit environment. Implement everything exactly as specified.
+
+Project summary (requirements)
+
+Fullstack app: React (Vite) frontend + Express backend (Node 18+). Tailwind CSS for UI, Framer Motion for transitions.
+
+Providers: support OpenAI Images API (gpt-image-1), Hugging Face Inference (stabilityai/stable-diffusion variants), and Replicate (anything-v4 or chosen model). Back-end chooses provider by preference and falls back elegantly. Use server-side proxy so API keys are never exposed to browser. Provide a provider selection UI for testing.
+
+Style Palette: ingest /mnt/data/Archive 4.zip and /mnt/data/Archive 5.zip, extract all .png/.jpg/.jpeg/.webp into /vexura-client/public/styles/samples/, create thumbnails, and display them in a “Style Palette” gallery. Clicking a style sets it as the init_image for image-to-image generation.
+
+Generation modes:
+
+Text-to-Image: prompt → image
+
+Image-to-Image: style image + prompt → image (OpenAI edits, or HF/Replicate image edit if provider supports)
+
+Concept Extract + Prompt Expansion: run a CLIP/OpenAI vision embedding over a style image, extract 6–8 keywords and sample style descriptors, and use them to automatically expand the prompt (resulting in stylistically consistent outputs).
+
+Batch Export: generate multiple sizes, attach metadata CSV (filename,title,prompt,model,provider,seed,width,height,license), package into a zip and return to client for download. Option to include minted metadata JSON for marketplaces.
+
+IPFS / NFT Storage: server endpoint to upload ZIPs to nft.storage (or alternative pinning providers) using nft_key provided by user. Return the CID and URL. Provide instructions to verify retention.
+
+Marketplace listing: secure admin endpoints (require ADMIN_API_KEY) for listing/minting placeholders (OpenSea / Phaton / Rarible). Do not store marketplace keys in repo. Provide templates & step-by-step instructions to complete listing workflows and required signatures.
+
+Security & Production hardening: input validation, rate limiting, size limits, admin API key, CORS restrictions, helmet headers, and a scripts/rotate_keys.sh key rotation helper. Provide instructions for secret storage (Replit secrets / Vercel / AWS Secrets Manager).
+
+Fine-tuning templates: provide bash templates for Replicate & Hugging Face (dataset format, upload steps, rough cost estimate ranges). Warn user that fine-tuning requires provider credits and may not be free.
+
+License & compliance: include a Commercial Licensing Checklist file instructing the team to verify the model license and confirm commercial use is allowed before selling generated works. Also include recommended metadata to store license attribution in minted tokens.
+
+CI/CD & deployment: GitHub Actions to build client, run basic tests, and deploy server to Render/Heroku and client to Vercel/Netlify. Include environment variable recommendations.
+
+UX: professional Tailwind design, gallery view, zoom modal, animation, progress indicators (generation progress if provider supports it), and “Recent Creations” local gallery.
+
+Delivery: produce a downloadable project ZIP once the Replit task completes.
+
+Files & folder structure (create exactly)
+/vexura-client
+  /public
+    /styles/samples/    # extracted style images from the provided archives
+  /src
+    App.jsx
+    main.jsx
+    index.css           # Tailwind input
+    tailwind.css        # compiled
+    components/         # Gallery, StyleCard, Modal, Exporter
+/vexura-server
+  server.js
+  package.json
+  .env.example
+  /scripts
+    rotate_keys.sh
+  /finetune
+    replicate_finetune.sh
+    hf_finetune.sh
+  README_finetuning.md
+README.md
+INSTRUCTIONS.txt
+LICENSE_CHECKLIST.md
+.github/workflows/ci.yml
+
+Server: key endpoints & behavior (implement these exactly)
+
+GET /api/ping — returns provider availability flags.
+
+GET /api/styles — reads /vexura-client/public/styles/samples/ and returns list of {name, dataUri, thumbUri}.
+
+POST /api/generate
+Body: { prompt, provider='openai'|'hf'|'replicate', init_image?, width=512, height=512, seed?, steps?, guidance_scale? }
+Behavior:
+
+Validate inputs (express-validator). Reject sizes > 2048.
+
+If init_image (data URI) provided: call provider’s image-edit API (OpenAI edits or HF/Replicate image2image) with prompt and init_image (pass size). If provider supports progress polling (Replicate), expose a prediction_url to client to poll progress.
+
+If text only: call provider’s text-to-image.
+
+Return { image: dataURI, meta: { provider, model, seed, width, height } }. Store generated images temporarily on server for batch exports if needed.
+
+POST /api/batch_generate
+Body: { prompt, sizes: ["512","1024x1024"], provider, style_image_dataUri (optional) }
+Behavior:
+
+Iterate sizes, produce images, build metadata.csv and zip them, stream zip back to client for download.
+
+Rate limit batch to prevent abuse.
+
+POST /api/ipfs_upload
+Body: { nft_key, zip_b64 }
+Behavior: upload zip to nft.storage https://api.nft.storage/upload, return JSON response (CID). Document TTL and pinning policy in README.
+
+POST /api/marketplace/list (admin only)
+Body: { title, description, image_cid, price_eth, royalties_pct, external_url }
+Behavior: placeholder that validates inputs and returns structured payload to be used by caller to call marketplace API (OpenSea, Phaton). Provide detailed comments where to add provider-specific API code.
+
+Server security & ops
+
+Use express-rate-limit default 30 requests/min per IP; adjustable via env.
+
+Admin endpoints must verify x-api-key header equals ADMIN_API_KEY in server .env.
+
+Helmet headers, body size limits, and strict CORS for production host.
+
+Log generation requests (minimal PII), rotate logs, and set retention policy (instructions in README).
+
+Provide scripts/rotate_keys.sh to rotate ADMIN_API_KEY.
+
+Recommend placing provider keys in Replit Secrets: OPENAI_API_KEY, HF_API_TOKEN, REPLICATE_API_TOKEN, NFT_STORAGE_KEY, ADMIN_API_KEY.
+
+Frontend UX spec (Vexura design)
+
+Homepage: Hero, short description, “Create” CTA. Clean minimalist palette (dark/neo-noir accent).
+
+Canvas page: left pane prompt + controls, center large preview (1024x1024), right pane Style Palette gallery.
+
+Style Palette: grid of thumbnails pulled from /api/styles. Clicking sets selected style. Allow upload of a new style (client uploads file -> server stores to /public/styles/samples/ and returns updated list).
+
+Gallery: “Recent Creations” saved locally (IndexedDB) with thumbnails, title, prompt, provider and CID if uploaded.
+
+Generation flow: show spinner and progress messages; if provider offers a prediction url (Replicate), poll and show progress bar and intermediate thumbnails if available.
+
+Batch Export UI: input sizes, generate zip, download automatically.
+
+IPFS Upload button: after generating or batch export, allow uploading zip to nft.storage via POST /api/ipfs_upload and show returned CID + gateway URL (e.g., https://ipfs.io/ipfs/<cid>).
+
+Export modal: include metadata.csv preview and a toggle to include license attribution lines suggested by LICENSE_CHECKLIST.md.
+
+Mobile responsive and accessible (aria labels, keyboard navigation).
+
+Prompt engineering & concept extraction
+
+Implement these features on server:
+
+Concept extractor: endpoint POST /api/extract_concepts with { image_dataUri } that:
+
+Runs image through a CLIP model or OpenAI vision embedding to extract top 8 keywords, dominant colors, textures, moods.
+
+Returns an expanded prompt template: "<original_keywords>, neon, high detail, 8k, cinematic lighting, stylized by <style_name>".
+
+Provide a “one-click expand” on frontend that combines extracted concepts into the generation prompt.
+
+Provide 6 high-quality prompt templates (Vexura presets) for different genres: Abstract Neon, Futuristic Surrealism, Organic Sculpture, Cyberpunk Collage, Dreamscape Watercolor, Minimalist Geometric.
+
+Fine-tuning templates (in /vexura-server/finetune/)
+
+replicate_finetune.sh — prepare dataset, upload to Replicate, run training job (document endpoints & cost). Include sample manifest format:
+
+dataset/
+  images/
+    img0001.png
+    img0002.png
+  captions.txt  # one caption per image
+
+
+hf_finetune.sh — template using accelerate + diffusers example script with --train_text_encoder flags if needed.
+
+README_finetuning.md outlines:
+
+dataset size recommendations,
+
+cost ranges (small: $200-$800; medium: $800-$3000; large: $3000+),
+
+how to prepare dataset from the styles in /mnt/data/Archive 4.zip and /mnt/data/Archive 5.zip.
+
+Commercial licensing & compliance (create LICENSE_CHECKLIST.md)
+
+Include a checklist:
+
+Identify each model used (exact model name & version tag).
+
+Check model card for Commercial field and License on Hugging Face / Replicate. If license denies commercial usage — DO NOT use for sales.
+
+Record the model card URL and screenshot/save the licensing text.
+
+If using community models, consider obtaining a license/consent or use a commercial model (OpenAI images have commercial terms; check OpenAI’s latest TOS).
+
+Include attribution metadata in minted tokens (model_name, provider, prompt, date_generated).
+
+Legal advice recommended before large commercial operations.
+
+Metadata & minting recommendations (NFT readiness)
+
+Metadata fields for each artwork:
+
+{
+  "name": "Title",
+  "description": "Prompt + concept expansion + model attribution",
+  "image": "ipfs://<CID>/<filename>.png",
+  "attributes": [
+    {"trait_type":"Prompt","value":"..."},
+    {"trait_type":"Model","value":"stabilityai/stable-diffusion-2"},
+    {"trait_type":"Provider","value":"HuggingFace"},
+    {"trait_type":"License","value":"CC-BY-4.0 OR ModelLicenseName"},
+    {"trait_type":"Seed","value":"12345678"},
+    {"trait_type":"Resolution","value":"1024x1024"}
+  ]
+}
+
+
+On-chain royalties: store royalty info in contract metadata (if minting smart contract).
+
+For marketplaces that require a direct upload (OpenSea), use their metadata upload pattern and ensure image points to ipfs://CID.
+
+CI/CD and deployment notes
+
+GitHub Actions pipeline: build client, run linter, run server lint & tests, if pass — deploy client to Vercel and server to Render / Heroku. Use encrypted secrets for API keys.
+
+For preview deployments, recommend Render or Railway for server (with environment variables), and Vercel for client static build.
+
+Commands to run in Replit (add as RUN button)
+
+cd vexura-server && npm ci
+
+cd ../vexura-client && npm ci && npm run dev
+
+Open http://localhost:5173
+
+Where to place your uploaded style archives (these files are already in the Replit environment)
+
+Use these local paths when implementing the style ingestion step (extract them programmatically at startup):
+
+/mnt/data/Archive 4.zip
+
+/mnt/data/Archive 5.zip
+
+Server extraction script (run at server startup if samples folder is empty):
+
+# server/scripts/unpack_styles.sh
+unzip -o /mnt/data/Archive\ 4.zip -d ../vexura-client/public/styles/samples/ || true
+unzip -o /mnt/data/Archive\ 5.zip -d ../vexura-client/public/styles/samples/ || true
+# create thumbs (requires ImageMagick)
+mogrify -path ../vexura-client/public/styles/thumbs -resize 320x320 ../vexura-client/public/styles/samples/*.{png,jpg,jpeg,webp}
+
+Deliverables for the Replit run
+
+Full project files and folders described above
+
+vexura_complete_release.zip placed at /mnt/data/vexura_complete_release.zip (so you can download)
+
+INSTRUCTIONS.txt, LICENSE_CHECKLIST.md, README.md containing fine-tuning steps, cost estimate, and commercial licensing warnings
+
+All code must be linted and runnable locally with zero placeholders (marketplace calls should be templates with clear hooks where vendor credentials are required, not hardcoded secrets)
+
+Final high-quality prompt templates (use these inside the app)
+
+Abstract Neon
+A high-detail abstract neon digital painting, fractal composition, reflective surfaces, volumetric lighting, hyperreal textures, ultra-sharp, 8k, by Vexura — stylized, cinematic color grading, HDR, depth of field.
+
+Futuristic Surrealism
+Surreal futuristic scene with floating bioluminescent structures, muted chrome, cinematic rim lighting, long exposure motion blur, photorealistic rendering, concept art detail.
+
+Organic Sculpture
+A tactile organic sculpture forged from metallic and glass fibers, macro texture detail, shallow depth of field, studio lighting, pristine finish, photoreal.
+
+Cyberpunk Collage
+Cyberpunk street collage, messy neon signage, wet asphalt reflections, dramatic backlight, film grain, high dynamic range, layered textures.
+
+Dreamscape Watercolor
+Ethereal watercolor dreamscape, soft gradients, paper texture, drifting shapes, luminous color washes, high-resolution scan.
+
+Minimalist Geometric
+Minimalist geometric composition, perfect symmetry, soft shadows, subtle gradients, tactile paper grain, museum poster aesthetic.
+
+Final notes (legal & operational)
+
+Do not use any model for commercial sales until you verify the model license. Add a step in your launch checklist that requires the legal team to approve models and providers. Include screenshot/save of the model card.
+
+Rotate keys after initial tests. Use Replit secrets or a secrets manager for production.
+
+Costs: model usage has variable cost. Using OpenAI or Stability for high-resolution high-step images is billable. Use rate-limits and quotas to avoid runaway bills.
+
+Fine-tuning and dataset creation may be necessary for perfect, consistent "brand" style; I included templates and cost guidance.

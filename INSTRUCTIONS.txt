@@ -1,0 +1,251 @@
+VEXURA - INSTRUCTIONS FOR USE
+====================================
+
+GETTING STARTED
+---------------
+
+1. Install dependencies:
+   npm install
+
+2. Set up environment variables:
+   - Copy .env.example to .env
+   - Add your API keys (see README.md for where to get them)
+
+3. Start development server:
+   npm run dev
+
+4. Access the application:
+   http://localhost:5000
+
+
+USING THE APPLICATION
+--------------------
+
+HOMEPAGE:
+- Click "Create Now" to start generating artwork
+- Click "View Gallery" to see your recent creations
+
+CREATE PAGE:
+- Left Panel: Enter your prompt and configure settings
+  - Use Prompt Presets for quick templates
+  - Select AI Provider (OpenAI, Hugging Face, or Replicate)
+  - Adjust Advanced Settings (size, steps, guidance scale)
+  - Click "Extract Concepts" if you have a style selected
+
+- Center Panel: View your generated artwork
+  - Click image to zoom
+  - Download, Batch Export, or Upload to IPFS
+
+- Right Panel: Style Palette
+  - Click a style image to use it for image-to-image generation
+  - Upload your own style images
+
+GALLERY PAGE:
+- View all your locally saved creations
+- Download, view, upload to IPFS, or delete artworks
+- All generations are stored locally in IndexedDB
+
+
+API USAGE
+---------
+
+All API endpoints are prefixed with /api
+
+Rate Limits:
+- Standard endpoints: 30 requests/minute
+- Batch generation: 5 requests/minute
+
+Authentication:
+- Most endpoints: No auth required
+- Admin endpoints (/api/marketplace/list): Requires x-api-key header
+
+
+BATCH EXPORT
+------------
+
+Generate multiple sizes at once:
+
+1. Generate an artwork in the Create page
+2. Click "Batch Export"
+3. Select desired sizes
+4. Optionally include license attribution
+5. Download ZIP containing:
+   - Multiple size versions
+   - metadata.csv with generation details
+   - NFT-ready metadata.json files
+   - license_info.txt (if selected)
+
+
+IPFS UPLOAD
+-----------
+
+Upload artworks to decentralized storage:
+
+1. Generate or select an artwork
+2. Click "Upload to IPFS"
+3. Wait for upload to complete
+4. Copy the CID for use in NFT metadata
+5. Access via gateway URL: https://ipfs.io/ipfs/{CID}
+
+Note: Content is pinned on nft.storage. Retention depends on their service policy.
+
+
+CONCEPT EXTRACTION
+------------------
+
+Extract style keywords from reference images:
+
+1. Select a style image from the palette
+2. Click "Extract Concepts from Style"
+3. AI will analyze the image and add keywords to your prompt
+4. Edit the expanded prompt as desired
+5. Generate with the enhanced prompt
+
+
+FINE-TUNING
+-----------
+
+For custom model training, see:
+- README_finetuning.md - Complete guide
+- finetune/replicate_finetune.sh - Replicate training script
+- finetune/hf_finetune.sh - Hugging Face training script
+
+Cost estimates:
+- Small (100-500 images): $200-$800
+- Medium (500-2000): $800-$3000
+- Large (2000+): $3000+
+
+
+MARKETPLACE LISTING
+-------------------
+
+Admin endpoint for generating marketplace metadata:
+
+POST /api/marketplace/list
+Headers: x-api-key: {ADMIN_API_KEY}
+
+Body:
+{
+  "title": "Artwork Title",
+  "description": "Description",
+  "imageCid": "ipfs_cid",
+  "priceEth": 0.1,
+  "royaltiesPct": 10,
+  "externalUrl": "https://example.com"
+}
+
+Returns structured metadata for OpenSea, Rarible, etc.
+
+Note: This endpoint only returns metadata templates.
+You must use marketplace SDKs with your credentials to complete listings.
+
+
+SECURITY BEST PRACTICES
+-----------------------
+
+1. API Keys:
+   - Never commit API keys to git
+   - Use environment variables or Replit Secrets
+   - Rotate keys regularly with scripts/rotate_keys.sh
+
+2. Admin Endpoints:
+   - Keep ADMIN_API_KEY secret
+   - Rotate after initial tests
+   - Never expose in client-side code
+
+3. Rate Limiting:
+   - Respect rate limits to avoid bills
+   - Batch operations are limited to prevent abuse
+   - Monitor usage on provider dashboards
+
+
+COMMERCIAL USE
+--------------
+
+IMPORTANT: Before selling AI-generated artwork:
+
+1. Read LICENSE_CHECKLIST.md
+2. Verify model licenses allow commercial use
+3. Include proper attribution in NFT metadata
+4. Keep records of license verification
+5. Consult legal counsel for large operations
+
+
+TROUBLESHOOTING
+---------------
+
+Application won't start:
+- Check all required API keys are set
+- Verify Node.js version is 18+
+- Run: npm install
+
+Generation fails:
+- Check API key is valid
+- Verify provider has credits/quota remaining
+- Try a different provider
+- Check rate limits
+
+Style images not loading:
+- Archive extraction may have failed
+- Check client/public/styles/samples/ directory
+- Manually extract Archive 4.zip and Archive 5.zip if needed
+
+IPFS upload fails:
+- Verify NFT_STORAGE_KEY is valid
+- Check file size isn't too large
+- Try again (network issues)
+
+Batch export slow:
+- Normal for multiple generations
+- Each size is generated sequentially
+- Consider reducing number of sizes
+
+
+DEPLOYMENT
+----------
+
+Frontend (Vercel):
+1. Build: npm run build
+2. Deploy client/dist directory
+3. Set environment variables in Vercel dashboard
+
+Backend (Render/Heroku):
+1. Connect git repository
+2. Set environment variables
+3. Deploy with Node.js buildpack
+4. Start command: npm start
+
+Environment variables required:
+- OPENAI_API_KEY
+- HF_API_TOKEN
+- REPLICATE_API_TOKEN
+- NFT_STORAGE_KEY
+- ADMIN_API_KEY
+- NODE_ENV=production
+
+
+KEY ROTATION
+------------
+
+Rotate admin API key:
+bash scripts/rotate_keys.sh
+
+Manually rotate other keys:
+1. Generate new key on provider dashboard
+2. Update environment variable
+3. Test application
+4. Revoke old key
+
+
+SUPPORT
+-------
+
+Documentation: README.md
+Licensing: LICENSE_CHECKLIST.md
+Fine-tuning: README_finetuning.md
+
+For issues or questions, please open a GitHub issue.
+
+
+VERSION: 1.0.0
+LAST UPDATED: November 2024

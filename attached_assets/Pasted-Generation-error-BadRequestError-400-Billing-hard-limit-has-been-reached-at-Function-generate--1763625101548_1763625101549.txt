@@ -1,0 +1,40 @@
+Generation error: BadRequestError: 400 Billing hard limit has been reached
+    at Function.generate (/home/runner/workspace/node_modules/openai/src/core/error.ts:72:14)
+    at OpenAI.makeStatusError (/home/runner/workspace/node_modules/openai/src/client.ts:478:28)
+    at OpenAI.makeRequest (/home/runner/workspace/node_modules/openai/src/client.ts:728:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async generateImageOpenAI (/home/runner/workspace/server/lib/openai.ts:10:20)
+    at async generateImage (/home/runner/workspace/server/lib/providers.ts:107:20)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:78:24) {
+  status: 400,
+  headers: Headers {
+    date: 'Thu, 20 Nov 2025 07:51:25 GMT',
+    'content-type': 'application/json',
+    'content-length': '177',
+    connection: 'keep-alive',
+    'openai-version': '2020-10-01',
+    'openai-organization': 'user-lncstdccl7casgvm07s34fcc',
+    'openai-project': 'proj_KPA0sQOI0z1YMa2LbrExDIKa',
+    'x-request-id': 'req_2b9ce682ad84414c8ef567d44612a29d',
+    'openai-processing-ms': '219',
+    'x-envoy-upstream-service-time': '222',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=SRS6tGsHjO3CV79SACTyEIdMHaRm2uD5.oskafmaBig-1763625085-1.0.1.1-sunqdWu3U6Pq0ADbJLZJESw1ZCmPh9apjdxp._dMnS4tLIHmqo4Em_vkNdwUqaug_JG1eER7J6jb4tI9TrWmoxGrC6xJF8C5XJ4US.b5FaE; path=/; expires=Thu, 20-Nov-25 08:21:25 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=_dY1XpNgBc9JHb01_GDmnYTel6Gt3Q0sQ1rRqrfVnNM-1763625085037-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-content-type-options': 'nosniff',
+    server: 'cloudflare',
+    'cf-ray': '9a165cabcabf1137-ORD',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  requestID: 'req_2b9ce682ad84414c8ef567d44612a29d',
+  error: {
+    message: 'Billing hard limit has been reached',
+    type: 'image_generation_user_error',
+    param: null,
+    code: 'billing_hard_limit_reached'
+  },
+  code: 'billing_hard_limit_reached',
+  param: null,
+  type: 'image_generation_user_error'
+}
+7:51:25 AM [express] POST /api/generate 500 in 360ms :: {"error":"400 Billing hard limit has been re…
