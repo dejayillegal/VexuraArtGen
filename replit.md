@@ -134,3 +134,37 @@ Configuration prepared for PostgreSQL with Neon serverless driver. Schema includ
 
 **API Communication:**
 All external API calls use axios with proper error handling. The client uses a custom `apiRequest` wrapper that handles JSON serialization, credentials, and error responses.
+
+## Recent Changes
+
+**November 20, 2025 - Replit Environment Setup**
+- Configured Vite dev server to work with Replit's proxy environment
+  - Set host to 0.0.0.0 on port 5000
+  - Configured HMR with WSS protocol and client port 443
+  - Enabled allowedHosts in server configuration
+- Modified OpenAI client initialization to be lazy-loaded
+  - Allows server to start without API keys configured
+  - API keys only required when using specific providers
+- Application now fully operational in Replit with fallback to free providers (Pollinations, Segmind)
+- Style archives extracted on startup (located in attached_assets/)
+- Frontend successfully loading with dark theme and all UI components functional
+
+## Replit-Specific Configuration
+
+**Environment Setup:**
+- Application runs on port 5000 (required by Replit)
+- Vite configured with Replit-specific HMR settings
+- Trust proxy enabled for rate limiting to work correctly
+- Style images automatically extracted from zip archives on first run
+
+**Optional API Keys:**
+The application works out of the box using free providers (Pollinations). For enhanced functionality, you can optionally add:
+- `OPENAI_API_KEY` - For DALL-E 3 generation and GPT-4 Vision concept extraction
+- `REPLICATE_API_TOKEN` - For Stable Diffusion via Replicate
+- `NFT_STORAGE_KEY` - For IPFS uploads
+- `ADMIN_API_KEY` - For protected marketplace endpoints
+
+**Workflow:**
+- Single workflow: "Start application" runs `npm run dev`
+- Serves both frontend (React/Vite) and backend (Express) on port 5000
+- Frontend accessible via webview output type

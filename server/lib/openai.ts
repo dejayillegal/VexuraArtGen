@@ -1,13 +1,26 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy-load OpenAI client to allow server to start without API key
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY is not configured. Please set it in your environment variables.");
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export async function generateImageOpenAI(params: {
   prompt: string;
   size?: string;
 }): Promise<{ url: string }> {
-  const response = await openai.images.generate({
+  const client = getOpenAIClient();
+  const response = await client.images.generate({
     model: "dall-e-3",
     prompt: params.prompt,
     n: 1,
@@ -25,7 +38,8 @@ export async function extractConceptsOpenAI(base64Image: string): Promise<{
   mood?: string;
 }> {
   // Using GPT-4 Turbo for vision analysis
-  const response = await openai.chat.completions.create({
+  const client = getOpenAIClient();
+  const response = await client.chat.completions.create({
     model: "gpt-4-turbo",
     messages: [
       {
@@ -72,4 +86,4 @@ export async function extractConceptsOpenAI(base64Image: string): Promise<{
   };
 }
 
-export { openai };
+export { getOpenAIClient as openai };
