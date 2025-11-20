@@ -13,9 +13,10 @@ import type { GenerateResponse } from "@shared/schema";
 interface PreviewCanvasProps {
   generatedImage: GenerateResponse | null;
   isGenerating: boolean;
+  lastPrompt: string;
 }
 
-export function PreviewCanvas({ generatedImage, isGenerating }: PreviewCanvasProps) {
+export function PreviewCanvas({ generatedImage, isGenerating, lastPrompt }: PreviewCanvasProps) {
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showIpfsModal, setShowIpfsModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
@@ -218,7 +219,12 @@ export function PreviewCanvas({ generatedImage, isGenerating }: PreviewCanvasPro
       </div>
 
       {/* Modals */}
-      <BatchExportModal open={showBatchModal} onOpenChange={setShowBatchModal} />
+      <BatchExportModal 
+        open={showBatchModal} 
+        onOpenChange={setShowBatchModal}
+        generatedImage={generatedImage}
+        lastPrompt={lastPrompt}
+      />
       <IpfsUploadModal
         open={showIpfsModal}
         onOpenChange={setShowIpfsModal}

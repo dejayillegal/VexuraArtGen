@@ -14,9 +14,13 @@ import { Progress } from "@/components/ui/progress";
 import { Package, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+import type { GenerateResponse } from "@shared/schema";
+
 interface BatchExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  generatedImage: GenerateResponse | null;
+  lastPrompt: string;
 }
 
 const AVAILABLE_SIZES = [
@@ -26,20 +30,28 @@ const AVAILABLE_SIZES = [
   { label: "1792×1024", value: "1792x1024" },
 ];
 
-export function BatchExportModal({ open, onOpenChange }: BatchExportModalProps) {
+export function BatchExportModal({ open, onOpenChange, generatedImage, lastPrompt }: BatchExportModalProps) {
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["1024x1024"]);
   const [includeLicense, setIncludeLicense] = useState(true);
   const { toast } = useToast();
 
   const exportMutation = useMutation({
     mutationFn: async () => {
+      if (!generatedImage) {
+        throw new Error("No image to export");
+      }
+
+      // Use pollinations as default free provider for batch export
+      const provider = generatedImage.meta?.provider === "openai" ? "pollinations" : (generatedImage.meta?.provider || "pollinations");
+      const promptToUse = lastPrompt || "Abstract digital art, high quality, professional";
+      
       const response = await fetch("/api/batch_generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: "Sample prompt for batch export",
+          prompt: promptToUse,
           sizes: selectedSizes,
-          provider: "openai",
+          provider: provider,
         }),
       });
 

@@ -27,7 +27,7 @@ import { saveGeneration } from "@/lib/db";
 
 interface PromptPanelProps {
   selectedStyle: Style | null;
-  onGenerate: (result: GenerateResponse) => void;
+  onGenerate: (result: GenerateResponse, prompt: string) => void;
   onGeneratingChange: (isGenerating: boolean) => void;
 }
 
@@ -47,7 +47,7 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
     },
     onSuccess: async (data: GenerateResponse) => {
       onGeneratingChange(false);
-      onGenerate(data);
+      onGenerate(data, prompt);
 
       // Save to IndexedDB - ensure meta exists
       if (data.meta) {

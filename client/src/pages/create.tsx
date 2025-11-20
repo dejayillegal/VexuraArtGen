@@ -10,6 +10,7 @@ export default function Create() {
   const [selectedStyle, setSelectedStyle] = useState<Style | null>(null);
   const [generatedImage, setGeneratedImage] = useState<GenerateResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [lastPrompt, setLastPrompt] = useState<string>("");
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,8 +26,9 @@ export default function Create() {
         >
           <PromptPanel
             selectedStyle={selectedStyle}
-            onGenerate={(result) => {
+            onGenerate={(result, prompt) => {
               setGeneratedImage(result);
+              setLastPrompt(prompt);
               setIsGenerating(false);
             }}
             onGeneratingChange={setIsGenerating}
@@ -43,6 +45,7 @@ export default function Create() {
           <PreviewCanvas
             generatedImage={generatedImage}
             isGenerating={isGenerating}
+            lastPrompt={lastPrompt}
           />
         </motion.main>
 
