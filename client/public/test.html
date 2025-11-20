@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vexura API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #111;
+            color: #fff;
+        }
+        button {
+            background: #8b5cf6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #7c3aed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #2a2a2a;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Vexura API Test Suite</h1>
+    <p>This page tests all Vexura API endpoints to ensure everything works correctly.</p>
+    
+    <div>
+        <button onclick="testPing()">1. Test API Ping</button>
+        <button onclick="testGenerate()">2. Generate Test Image</button>
+        <button onclick="testDownload()">3. Test Download</button>
+        <button onclick="testAll()">Run All Tests</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        let lastGeneratedImage = null;
+        
+        function log(message, type = 'info') {
+            const result = document.getElementById('result');
+            const statusClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            result.innerHTML += `<div class="status ${statusClass}">${message}</div>`;
+        }
+        
+        async function testPing() {
+            log('Testing API ping...', 'info');
+            try {
+                const response = await fetch('/api/ping');
+                const data = await response.json();
+                log(`✓ API Ping successful! Available providers: ${JSON.stringify(data)}`, 'success');
+            } catch (error) {
+                log(`✗ API Ping failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGenerate() {
+            log('Starting image generation (this may take 5-10 seconds)...', 'info');
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: 'A beautiful sunset over mountains, vibrant colors, professional photography',
+                        provider: 'pollinations',
+                        width: 512,
+                        height: 512
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                if (!data.image) {
+                    throw new Error('No image data in response');
+                }
+                
+                lastGeneratedImage = data.image;
+                
+                log(`✓ Image generated successfully in ${duration}s`, 'success');
+                log(`Provider: ${data.meta.provider}, Model: ${data.meta.model}`, 'info');
+                log(`Dimensions: ${data.meta.width}x${data.meta.height}`, 'info');
+                log(`Image data size: ${(data.image.length / 1024).toFixed(2)} KB`, 'info');
+                
+                // Display the image
+                const img = document.createElement('img');
+                img.src = data.image;
+                img.alt = 'Generated artwork';
+                img.onload = () => {
+                    log('✓ Image loaded and displayed successfully!', 'success');
+                };
+                img.onerror = () => {
+                    log('✗ Image failed to load!', 'error');
+                };
+                
+                document.getElementById('result').appendChild(img);
+                
+            } catch (error) {
+                log(`✗ Image generation failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testDownload() {
+            if (!lastGeneratedImage) {
+                log('✗ No image to download. Generate an image first!', 'error');
+                return;
+            }
+            
+            try {
+                const link = document.createElement('a');
+                link.href = lastGeneratedImage;
+                link.download = `vexura-test-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                log('✓ Download initiated successfully!', 'success');
+            } catch (error) {
+                log(`✗ Download failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAll() {
+            document.getElementById('result').innerHTML = '<h2>Running All Tests...</h2>';
+            await testPing();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testGenerate();
+        }
+    </script>
+</body>
+</html>

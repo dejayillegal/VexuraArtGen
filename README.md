@@ -14,10 +14,16 @@ Professional-grade AI art generation platform for creating high-value, sellable 
 
 ## Quick Start
 
-### Prerequisites
+### Ready to Use in Replit!
+
+**This application is ready to run immediately with no API keys required!**
+
+The application uses **Pollinations.ai** and **Segmind** as free providers, allowing you to generate artwork instantly.
+
+### Prerequisites (for local development)
 
 - Node.js 18+ and npm
-- API Keys (see Environment Variables below)
+- Optional: API Keys for premium providers (see Environment Variables below)
 
 ### Installation
 
@@ -27,20 +33,27 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the root directory (or use Replit Secrets):
+**All API keys are OPTIONAL!** The application works out of the box with free providers.
+
+Create a `.env` file in the root directory (or use Replit Secrets) for enhanced features:
 
 ```env
-# Required API Keys
-OPENAI_API_KEY=your_openai_api_key
-HF_API_TOKEN=your_huggingface_token
-REPLICATE_API_TOKEN=your_replicate_token
-NFT_STORAGE_KEY=your_nft_storage_key
-ADMIN_API_KEY=your_admin_secret_key
+# Optional - Premium AI Providers
+OPENAI_API_KEY=your_openai_api_key          # For DALL-E 3 and GPT-4 Vision
+REPLICATE_API_TOKEN=your_replicate_token    # For Replicate Stable Diffusion
 
-# Optional
+# Optional - NFT Features
+NFT_STORAGE_KEY=your_nft_storage_key        # For IPFS uploads
+ADMIN_API_KEY=your_admin_secret_key         # For marketplace endpoints
+
+# System (usually not needed in Replit)
 PORT=5000
 NODE_ENV=development
 ```
+
+**Free Providers (No API Key Required):**
+- **Pollinations.ai** - Completely free, Flux model
+- **Segmind** - Free tier, Stable Diffusion 1.5
 
 **Where to get API keys:**
 - OpenAI: https://platform.openai.com/api-keys

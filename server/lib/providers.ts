@@ -174,12 +174,20 @@ export async function generateImage(params: {
   // Try the requested provider first, then fallback to free options
   const providersToTry: Array<"openai" | "hf" | "replicate" | "pollinations" | "segmind"> = [provider];
   
-  // Add fallback providers (free options)
+  // Add fallback providers (free options) - always try both free providers
   if (provider !== "pollinations") {
     providersToTry.push("pollinations");
   }
-  if (provider !== "segmind" && provider !== "pollinations") {
+  if (provider !== "segmind") {
     providersToTry.push("segmind" as any);
+  }
+  
+  // Add the other free provider as final fallback
+  if (provider === "pollinations" && !providersToTry.includes("segmind" as any)) {
+    providersToTry.push("segmind" as any);
+  }
+  if (provider === "segmind" && !providersToTry.includes("pollinations")) {
+    providersToTry.push("pollinations");
   }
 
   let lastError: Error | null = null;
