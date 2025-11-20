@@ -92,9 +92,24 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
         if (prev) return `${prev}, ${data.expandedPrompt}`;
         return data.expandedPrompt;
       });
+      
+      const details = [
+        data.style && `Style: ${data.style}`,
+        data.mood && `Mood: ${data.mood}`,
+        data.lighting && `Lighting: ${data.lighting}`,
+        data.keywords?.length && `${data.keywords.length} keywords extracted`,
+      ].filter(Boolean).join(" • ");
+      
       toast({
-        title: "Concepts Extracted",
-        description: `Added ${data.keywords.length} keywords to your prompt.`,
+        title: "✨ Advanced Concepts Extracted",
+        description: details || "Successfully analyzed style and added to prompt",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Concept Extraction Failed",
+        description: error.message || "Unable to analyze image. Please ensure OpenAI API key is configured.",
+        variant: "destructive",
       });
     },
   });

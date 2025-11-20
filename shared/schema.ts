@@ -136,4 +136,64 @@ export const promptTemplates = [
     name: "Minimalist Geometric",
     template: "Minimalist geometric composition, perfect symmetry, soft shadows, subtle gradients, tactile paper grain, museum poster aesthetic.",
   },
-] as const;
+  {
+    id: "cyberpunk",
+    name: "Cyberpunk",
+    template: "Cyberpunk neon cityscape, futuristic megacity, vibrant neon colors, rain-soaked streets, holographic advertisements, flying vehicles, dystopian atmosphere, blade runner aesthetic, volumetric fog, cinematic composition, 8k ultra detailed",
+  },
+  {
+    id: "abstract",
+    name: "Abstract Art",
+    template: "Abstract geometric shapes, bold contrasting colors, dynamic swirling composition, modern art style, fluid motion, artistic expression, contemporary design, vibrant energy, masterpiece quality, award winning",
+  },
+  {
+    id: "fantasy",
+    name: "Fantasy Landscape",
+    template: "Epic fantasy landscape, magical atmosphere, mystical volumetric lighting, enchanted forest with ancient trees, ethereal beauty, floating islands, glowing crystals, dreamlike quality, concept art style, cinematic wide angle, 8k resolution",
+  },
+  {
+    id: "portrait",
+    name: "Portrait",
+    template: "Professional portrait photography, studio lighting setup, shallow depth of field, elegant pose, refined facial details, photorealistic skin texture, bokeh background, high-end fashion aesthetic, medium format camera quality",
+  },
+  {
+    id: "minimalist",
+    name: "Minimalist",
+    template: "Minimalist design, clean geometric lines, simple balanced composition, strategic negative space, modern Scandinavian aesthetic, muted pastel colors, zen atmosphere, architectural photography style",
+  },
+  {
+    id: "surreal",
+    name: "Surrealism",
+    template: "Surrealist dreamscape, impossible architecture, melting clocks aesthetic, Salvador Dali inspired, hyperrealistic details, mind-bending perspective, philosophical symbolism, museum quality artwork, 8k masterpiece",
+  },
+  {
+    id: "anime",
+    name: "Anime Art",
+    template: "Anime art style, cel shading technique, vibrant colors, expressive eyes, dynamic action pose, Studio Ghibli quality, detailed background, professional anime illustration, high resolution, trending on ArtStation",
+  },
+  {
+    id: "nature",
+    name: "Nature Photography",
+    template: "Stunning nature photography, golden hour lighting, dramatic landscape, pristine wilderness, perfect composition, National Geographic quality, crystal clear details, vivid natural colors, wide angle lens, breathtaking vista",
+  },
+  {
+    id: "scifi",
+    name: "Sci-Fi",
+    template: "Science fiction scene, advanced alien technology, futuristic spacecraft, otherworldly planets, volumetric nebula clouds, hard surface modeling, concept art quality, cinematic lighting, photorealistic rendering, 8k ultra HD",
+  },
+  {
+    id: "vintage",
+    name: "Vintage",
+    template: "Vintage aesthetic, retro 1970s style, film grain texture, faded colors, nostalgic atmosphere, analog photography look, classic composition, timeless elegance, warm color grading, authentic period details",
+  },
+  {
+    id: "horror",
+    name: "Dark Horror",
+    template: "Dark horror atmosphere, ominous shadows, eerie abandoned location, fog and mist, dramatic chiaroscuro lighting, gothic architecture, supernatural presence, cinematic suspense, moody color palette, photorealistic terror",
+  },
+  {
+    id: "watercolor",
+    name: "Watercolor",
+    template: "Delicate watercolor painting, soft flowing brushstrokes, translucent layers, pastel color palette, artistic paper texture, whimsical style, loose impressionistic details, peaceful atmosphere, traditional media aesthetic",
+  },
+];
