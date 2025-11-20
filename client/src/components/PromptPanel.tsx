@@ -92,14 +92,14 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
         if (prev) return `${prev}, ${data.expandedPrompt}`;
         return data.expandedPrompt;
       });
-      
+
       const details = [
         data.style && `Style: ${data.style}`,
         data.mood && `Mood: ${data.mood}`,
         data.lighting && `Lighting: ${data.lighting}`,
         data.keywords?.length && `${data.keywords.length} keywords extracted`,
       ].filter(Boolean).join(" • ");
-      
+
       toast({
         title: "✨ Advanced Concepts Extracted",
         description: details || "Successfully analyzed style and added to prompt",
@@ -108,7 +108,7 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
     onError: (error: any) => {
       toast({
         title: "Concept Extraction Failed",
-        description: error.message || "Unable to analyze image. Please ensure OpenAI API key is configured.",
+        description: error.message || "Unable to analyze image. Please try again.",
         variant: "destructive",
       });
     },
@@ -201,16 +201,23 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
       {/* Concept Extraction */}
       {selectedStyle && (
         <Button
-          variant="outline"
-          className="w-full gap-2"
           onClick={handleExtractConcepts}
           disabled={extractConceptsMutation.isPending}
+          variant="outline"
+          size="lg"
+          className="w-full gap-2"
           data-testid="button-extract-concepts"
         >
           <Wand2 className="w-4 h-4" />
-          {extractConceptsMutation.isPending ? "Extracting..." : "Extract Concepts from Style"}
+          {extractConceptsMutation.isPending ? "Extracting..." : "Extract Concepts from Style (FREE)"}
         </Button>
       )}
+      {selectedStyle && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Automatically generates professional prompt keywords from your style image - no API key required!
+        </p>
+      )}
+
 
       {/* Provider Selection */}
       <div className="space-y-2">
