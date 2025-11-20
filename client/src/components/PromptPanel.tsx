@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/accordion";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Sparkles, Wand2, Upload } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { promptTemplates, type GenerateResponse, type Style } from "@shared/schema";
@@ -38,6 +38,8 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
   const [height, setHeight] = useState(512);
   const [steps, setSteps] = useState(30);
   const [guidanceScale, setGuidanceScale] = useState(7);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [referenceStrength, setReferenceStrength] = useState(0.7);
   const { toast } = useToast();
 
   const generateMutation = useMutation({
@@ -133,6 +135,8 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
       steps,
       guidanceScale,
       initImage: selectedStyle?.dataUri,
+      referenceImage: referenceImage || undefined,
+      referenceStrength: referenceStrength,
     });
   };
 
@@ -146,6 +150,38 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
       return;
     }
     extractConceptsMutation.mutate(selectedStyle.dataUri);
+  };
+
+  const handleReferenceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setReferenceImage(event.target?.result as string);
+      toast({
+        title: "Reference Image Uploaded",
+        description: "The AI will generate variations based on this image.",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveReference = () => {
+    setReferenceImage(null);
+    toast({
+      title: "Reference Removed",
+      description: "Generation will proceed without reference image.",
+    });
   };
 
   const applyTemplate = (template: string) => {
@@ -197,6 +233,77 @@ export function PromptPanel({ selectedStyle, onGenerate, onGeneratingChange }: P
           maxLength={2000}
         />
       </div>
+
+      {/* Reference Image Upload */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Reference Image (Optional)</Label>
+          {referenceImage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRemoveReference}
+              className="h-7 text-xs"
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+        
+        {referenceImage ? (
+          <div className="space-y-3">
+            <div className="relative aspect-video rounded-lg overflow-hidden border border-border">
+              <img 
+                src={referenceImage} 
+                alt="Reference" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Reference Strength</Label>
+                <span className="text-xs text-muted-foreground">{referenceStrength.toFixed(2)}</span>
+              </div>
+              <Slider
+                value={[referenceStrength]}
+                onValueChange={(v) => setReferenceStrength(v[0])}
+                min={0.3}
+                max={0.95}
+                step={0.05}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Lower = more creative variation • Higher = closer to reference
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <input
+              type="file"
+              id="reference-upload"
+              accept="image/*"
+              className="hidden"
+              onChange={handleReferenceImageUpload}
+            />
+            <label htmlFor="reference-upload">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full gap-2"
+                onClick={() => document.getElementById('reference-upload')?.click()}
+              >
+                <Upload className="w-4 h-4" />
+                Upload Reference Image
+              </Button>
+            </label>
+            <p className="text-xs text-muted-foreground mt-2">
+              Upload an image to generate similar but creatively unique variations
+            </p>
+          </div>
+        )}
+      </Card>
 
       {/* Concept Extraction */}
       {selectedStyle && (

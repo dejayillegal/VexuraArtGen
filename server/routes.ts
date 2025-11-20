@@ -67,6 +67,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       body("seed").optional().isInt(),
       body("steps").optional().isInt({ min: 1, max: 150 }),
       body("guidanceScale").optional().isFloat({ min: 1, max: 20 }),
+      body("referenceImage").optional().isString(),
+      body("referenceStrength").optional().isFloat({ min: 0.1, max: 1.0 }),
     ],
     async (req, res) => {
       const errors = validationResult(req);
@@ -84,6 +86,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           seed: req.body.seed,
           steps: req.body.steps,
           guidanceScale: req.body.guidanceScale,
+          referenceImage: req.body.referenceImage,
+          referenceStrength: req.body.referenceStrength,
         });
 
         res.json(result);

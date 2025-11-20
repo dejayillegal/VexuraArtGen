@@ -60,13 +60,25 @@ export async function generateWithPollinations(params: {
   prompt: string;
   width?: number;
   height?: number;
+  referenceImage?: string;
+  referenceStrength?: number;
 }): Promise<{ imageBuffer: Buffer }> {
   // Pollinations.ai is completely free, no API key needed
   const width = params.width || 512;
   const height = params.height || 512;
   
+  // Enhance prompt if reference image is provided
+  let finalPrompt = params.prompt;
+  if (params.referenceImage) {
+    const strength = params.referenceStrength || 0.7;
+    const creativity = strength < 0.6 ? "highly creative interpretation" : 
+                       strength < 0.8 ? "creative variation" : 
+                       "faithful adaptation";
+    finalPrompt = `${params.prompt}, ${creativity} of reference style, maintaining artistic essence while adding unique elements`;
+  }
+  
   // Clean and encode the prompt
-  const encodedPrompt = encodeURIComponent(params.prompt);
+  const encodedPrompt = encodeURIComponent(finalPrompt);
   
   // Try multiple Pollinations endpoints with retry logic
   const models = ['flux', 'turbo', 'flux-realism'];
@@ -151,6 +163,8 @@ export async function generateImage(params: {
   seed?: number;
   steps?: number;
   guidanceScale?: number;
+  referenceImage?: string;
+  referenceStrength?: number;
 }): Promise<{
   image: string;
   meta: {
@@ -162,7 +176,7 @@ export async function generateImage(params: {
     predictionUrl?: string;
   };
 }> {
-  const { prompt, width = 512, height = 512 } = params;
+  const { prompt, width = 512, height = 512, referenceImage, referenceStrength } = params;
   let provider = params.provider;
 
   let imageUrl: string | undefined;
@@ -223,6 +237,8 @@ export async function generateImage(params: {
           prompt,
           width,
           height,
+          referenceImage,
+          referenceStrength,
         });
         imageBuffer = result.imageBuffer;
         model = "flux";
