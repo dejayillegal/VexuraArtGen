@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Trash2, Upload, Maximize2 } from "lucide-react";
+import { Download, Trash2, Upload, Maximize2, Sparkles, ZoomIn } from "lucide-react";
 import { getAllGenerations, deleteGeneration } from "@/lib/db";
 import { ZoomModal } from "@/components/ZoomModal";
 import { IpfsUploadModal } from "@/components/IpfsUploadModal";
+import { UpscaleModal } from "@/components/UpscaleModal"; // Import the UpscaleModal
 import { useToast } from "@/hooks/use-toast";
 import type { Generation } from "@shared/schema";
 
@@ -18,6 +19,7 @@ export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [showIpfsModal, setShowIpfsModal] = useState(false);
+  const [showUpscaleModal, setShowUpscaleModal] = useState(false); // State for Upscale Modal
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,6 +60,12 @@ export default function Gallery() {
     link.href = dataUri;
     link.download = `vexura-${id}.png`;
     link.click();
+  };
+
+  // Mock handleZoom function, replace with actual implementation if needed
+  const handleZoom = (imageDataUri: string) => {
+    setSelectedImage(imageDataUri);
+    setShowZoomModal(true);
   };
 
   return (
@@ -151,14 +159,27 @@ export default function Gallery() {
                           size="sm"
                           variant="outline"
                           className="flex-1 gap-1"
-                          onClick={() => {
-                            setSelectedImage(gen.imageDataUri);
-                            setShowZoomModal(true);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleZoom(gen.imageDataUri);
                           }}
                           data-testid={`button-view-${index}`}
                         >
-                          <Maximize2 className="w-3 h-3" />
+                          <ZoomIn className="w-3 h-3" />
                           View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(gen.imageDataUri);
+                            setShowUpscaleModal(true);
+                          }}
+                          data-testid={`button-upscale-${index}`}
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          Upscale
                         </Button>
                         <Button
                           size="sm"
@@ -208,6 +229,11 @@ export default function Gallery() {
       <IpfsUploadModal
         open={showIpfsModal}
         onOpenChange={setShowIpfsModal}
+        imageDataUri={selectedImage}
+      />
+      <UpscaleModal // Upscale Modal component
+        open={showUpscaleModal}
+        onOpenChange={setShowUpscaleModal}
         imageDataUri={selectedImage}
       />
     </div>

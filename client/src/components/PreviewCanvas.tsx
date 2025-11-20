@@ -8,6 +8,7 @@ import { Download, Upload, Maximize2, Package, Sparkles } from "lucide-react";
 import { BatchExportModal } from "./BatchExportModal";
 import { IpfsUploadModal } from "./IpfsUploadModal";
 import { ZoomModal } from "./ZoomModal";
+import { UpscaleModal } from "./UpscaleModal";
 import type { GenerateResponse } from "@shared/schema";
 
 interface PreviewCanvasProps {
@@ -20,6 +21,7 @@ export function PreviewCanvas({ generatedImage, isGenerating, lastPrompt }: Prev
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showIpfsModal, setShowIpfsModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
+  const [showUpscaleModal, setShowUpscaleModal] = useState(false);
 
   if (!generatedImage && !isGenerating) {
     return (
@@ -181,15 +183,6 @@ export function PreviewCanvas({ generatedImage, isGenerating, lastPrompt }: Prev
               <Button
                 variant="outline"
                 className="gap-2 flex-1"
-                onClick={handleDownload}
-                data-testid="button-download"
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 flex-1"
                 onClick={() => setShowZoomModal(true)}
                 data-testid="button-zoom"
               >
@@ -199,11 +192,20 @@ export function PreviewCanvas({ generatedImage, isGenerating, lastPrompt }: Prev
               <Button
                 variant="outline"
                 className="gap-2 flex-1"
-                onClick={() => setShowBatchModal(true)}
-                data-testid="button-batch-export"
+                onClick={() => setShowUpscaleModal(true)}
+                data-testid="button-upscale"
               >
-                <Package className="w-4 h-4" />
-                Batch Export
+                <Sparkles className="w-4 h-4" />
+                Upscale
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 flex-1"
+                onClick={handleDownload}
+                data-testid="button-download"
+              >
+                <Download className="w-4 h-4" />
+                Download
               </Button>
               <Button
                 className="gap-2 flex-1"
@@ -219,20 +221,25 @@ export function PreviewCanvas({ generatedImage, isGenerating, lastPrompt }: Prev
       </div>
 
       {/* Modals */}
-      <BatchExportModal 
-        open={showBatchModal} 
+      <BatchExportModal
+        open={showBatchModal}
         onOpenChange={setShowBatchModal}
         generatedImage={generatedImage}
         lastPrompt={lastPrompt}
       />
-      <IpfsUploadModal
-        open={showIpfsModal}
-        onOpenChange={setShowIpfsModal}
-        imageDataUri={generatedImage?.image}
-      />
       <ZoomModal
         open={showZoomModal}
         onOpenChange={setShowZoomModal}
+        imageDataUri={generatedImage?.image}
+      />
+      <UpscaleModal
+        open={showUpscaleModal}
+        onOpenChange={setShowUpscaleModal}
+        imageDataUri={generatedImage?.image}
+      />
+      <IpfsUploadModal
+        open={showIpfsModal}
+        onOpenChange={setShowIpfsModal}
         imageDataUri={generatedImage?.image}
       />
     </div>
